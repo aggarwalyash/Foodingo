@@ -5,8 +5,13 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -24,21 +29,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 
 public class StoreFragment extends Fragment {
-
+    RecyclerView recyclerView;
+    ArrayList<String> Number;
+    RecyclerView.LayoutManager RecyclerViewLayoutManager;
+    RecyclerViewAdapter RecyclerViewHorizontalAdapter;
+    LinearLayoutManager HorizontalLayout ;
+    View ChildView ;
+    int RecyclerViewItemPosition ;
     View view;
-    Button firstButton;
-    private String urlJsonObj = "https://api.androidhive.info/volley/person_object.json";
-    // json array response url
-    private String urlJsonArry = "https://api.androidhive.info/volley/person_array.json";
-    private static String TAG = MainActivity.class.getSimpleName();
-    private Button btnMakeObjectRequest, btnMakeArrayRequest;
-    // Progress dialog
-    private ProgressDialog pDialog;
-    private TextView txtResponse;
-    // temporary string to show the parsed response
-    private String jsonResponse;
 
     public StoreFragment() {
         // Required empty public constructor
@@ -53,169 +55,86 @@ public class StoreFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_store, container, false);
-/*        firstButton = (Button) view.findViewById(R.id.firstButton);
-        firstButton.setOnClickListener(new View.OnClickListener() {
+
+        recyclerView = (RecyclerView)view.findViewById(R.id.recyclerview1);
+
+        RecyclerViewLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
+
+        recyclerView.setLayoutManager(RecyclerViewLayoutManager);
+
+        // Adding items to RecyclerView.
+        AddItemsToRecyclerViewArrayList();
+
+        RecyclerViewHorizontalAdapter = new RecyclerViewAdapter(Number);
+
+        HorizontalLayout = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+        recyclerView.setLayoutManager(HorizontalLayout);
+
+        recyclerView.setAdapter(RecyclerViewHorizontalAdapter);
+
+
+        // Adding on item click listener to RecyclerView.
+        recyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+
+            GestureDetector gestureDetector = new GestureDetector(getActivity(), new GestureDetector.SimpleOnGestureListener() {
+
+                @Override public boolean onSingleTapUp(MotionEvent motionEvent) {
+
+                    return true;
+                }
+
+            });
             @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "First Fragment", Toast.LENGTH_LONG).show();
+            public boolean onInterceptTouchEvent(RecyclerView Recyclerview, MotionEvent motionEvent) {
+
+                ChildView = Recyclerview.findChildViewUnder(motionEvent.getX(), motionEvent.getY());
+
+                if(ChildView != null && gestureDetector.onTouchEvent(motionEvent)) {
+
+                    //Getting clicked value.
+                    RecyclerViewItemPosition = Recyclerview.getChildAdapterPosition(ChildView);
+
+                    // Showing clicked item value on screen using toast message.
+                    Toast.makeText(getActivity(), Number.get(RecyclerViewItemPosition), Toast.LENGTH_LONG).show();
+
+                }
+
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(RecyclerView Recyclerview, MotionEvent motionEvent) {
+
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
             }
         });
-*/
-        btnMakeObjectRequest = (Button) view.findViewById(R.id.btnObjRequest);
-        btnMakeArrayRequest = (Button) view.findViewById(R.id.btnArrayRequest);
-        txtResponse = (TextView) view.findViewById(R.id.txtResponse);
 
-        pDialog = new ProgressDialog(getContext());
-        pDialog.setMessage("Please wait...");
-        pDialog.setCancelable(false);
-
-        btnMakeObjectRequest.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // making json object request
-                makeJsonObjectRequest();
-            }
-        });
-
-        btnMakeArrayRequest.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // making json array request
-                makeJsonArrayRequest();
-            }
-        });
 
 
         return view;
 
     }
 
-    /**
-     * Method to make json object request where json response starts wtih {
-     * */
-    private void makeJsonObjectRequest() {
 
-        showpDialog();
+    // function to add items in RecyclerView.
+    public void AddItemsToRecyclerViewArrayList(){
 
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.GET,
-                urlJsonObj, null, new Response.Listener<JSONObject>() {
+        Number = new ArrayList<>();
+        Number.add("ONE");
+        Number.add("TWO");
+        Number.add("THREE");
+        Number.add("FOUR");
+        Number.add("FIVE");
+        Number.add("SIX");
+        Number.add("SEVEN");
+        Number.add("EIGHT");
+        Number.add("NINE");
+        Number.add("TEN");
 
-            @Override
-            public void onResponse(JSONObject response) {
-                Log.d(TAG, response.toString());
-
-                try {
-                    // Parsing json object response
-                    // response will be a json object
-                    String name = response.getString("name");
-                    String email = response.getString("email");
-                    JSONObject phone = response.getJSONObject("phone");
-                    String home = phone.getString("home");
-                    String mobile = phone.getString("mobile");
-
-                    jsonResponse = "";
-                    jsonResponse += "Name: " + name + "\n\n";
-                    jsonResponse += "Email: " + email + "\n\n";
-                    jsonResponse += "Home: " + home + "\n\n";
-                    jsonResponse += "Mobile: " + mobile + "\n\n";
-
-                    txtResponse.setText(jsonResponse);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Toast.makeText(getContext(),
-                            "Error: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                }
-                hidepDialog();
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
-                Toast.makeText(getContext(),
-                        error.getMessage(), Toast.LENGTH_SHORT).show();
-                // hide the progress dialog
-                hidepDialog();
-            }
-        });
-
-        // Adding request to request queue
-        AppController.getInstance().addToRequestQueue(jsonObjReq);
-    }
-
-    /**
-     * Method to make json array request where response starts with [
-     * */
-    private void makeJsonArrayRequest() {
-
-        showpDialog();
-
-        JsonArrayRequest req = new JsonArrayRequest(urlJsonArry,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d(TAG, response.toString());
-
-                        try {
-                            // Parsing json array response
-                            // loop through each json object
-                            jsonResponse = "";
-                            for (int i = 0; i < response.length(); i++) {
-
-                                JSONObject person = (JSONObject) response
-                                        .get(i);
-
-                                String name = person.getString("name");
-                                String email = person.getString("email");
-                                JSONObject phone = person
-                                        .getJSONObject("phone");
-                                String home = phone.getString("home");
-                                String mobile = phone.getString("mobile");
-
-                                jsonResponse += "Name: " + name + "\n\n";
-                                jsonResponse += "Email: " + email + "\n\n";
-                                jsonResponse += "Home: " + home + "\n\n";
-                                jsonResponse += "Mobile: " + mobile + "\n\n\n";
-
-                            }
-
-                            txtResponse.setText(jsonResponse);
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Toast.makeText(getContext(),
-                                    "Error: " + e.getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
-
-                        hidepDialog();
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
-                Toast.makeText(getContext(),
-                        error.getMessage(), Toast.LENGTH_SHORT).show();
-                hidepDialog();
-            }
-        });
-
-        // Adding request to request queue
-        AppController.getInstance().addToRequestQueue(req);
-    }
-
-    private void showpDialog() {
-        if (!pDialog.isShowing())
-            pDialog.show();
-    }
-
-    private void hidepDialog() {
-        if (pDialog.isShowing())
-            pDialog.dismiss();
     }
 
 }

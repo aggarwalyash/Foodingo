@@ -30,7 +30,7 @@
     <color name="dot_light_screen4">#e4b5fc</color>
     <color name="viewBg">#f1f5f8</color>
     <color name="album_title">#4c4c4c</color>
-
+    <color name="color_white">#FFFFFF</color>
     <array name="array_dot_active">
         <item>@color/dot_light_screen1</item>
         <item>@color/dot_light_screen2</item>
